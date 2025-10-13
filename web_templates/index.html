@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>河南大学校园网自动登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h2 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .status-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .status-connected {
+            color: #22c55e;
+        }
+        
+        .status-disconnected {
+            color: #ef4444;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #16a34a;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .logs {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .log-line {
+            margin: 2px 0;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .message.show {
+            display: block;
+        }
+        
+        .message-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #22c55e;
+        }
+        
+        .message-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 河南大学校园网自动登录</h1>
+            <p>生产级自动登录管理系统</p>
+        </div>
+        
+        <div class="dashboard">
+            <!-- 网络状态 -->
+            <div class="card">
+                <h2>📡 网络状态</h2>
+                <div class="status-item">
+                    <span class="status-label">连接状态</span>
+                    <span class="status-value" id="network-status">检查中...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">测试地址</span>
+                    <span class="status-value" id="test-url">-</span>
+                </div>
+                <button class="btn btn-primary" onclick="checkStatus()">🔄 刷新状态</button>
+            </div>
+            
+            <!-- 认证信息 -->
+            <div class="card">
+                <h2>🔐 认证信息</h2>
+                <div class="status-item">
+                    <span class="status-label">上次登录</span>
+                    <span class="status-value" id="last-login">从未登录</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">登录次数</span>
+                    <span class="status-value" id="login-count">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">用户名</span>
+                    <span class="status-value" id="username">-</span>
+                </div>
+                <button class="btn btn-success" onclick="doLogin()">🚀 立即登录</button>
+            </div>
+            
+            <!-- 自动登录控制 -->
+            <div class="card">
+                <h2>⚙️ 自动登录</h2>
+                <div class="status-item">
+                    <span class="status-label">自动登录</span>
+                    <span class="status-value" id="auto-login-status">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">检查间隔</span>
+                    <span class="status-value" id="check-interval">-</span>
+                </div>
+                <button class="btn btn-success" id="auto-login-btn" onclick="toggleAutoLogin()">启动自动登录</button>
+            </div>
+        </div>
+        
+        <!-- 快速登录 -->
+        <div class="card">
+            <h2>⚡ 快速登录</h2>
+            <div id="login-message" class="message"></div>
+            <form onsubmit="event.preventDefault(); doQuickLogin();">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="quick-username" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="quick-password" placeholder="请输入密码">
+                </div>
+                <div class="form-group">
+                    <label>运营商</label>
+                    <select id="quick-operator">
+                        <option value="local">校园网</option>
+                        <option value="yd">移动</option>
+                        <option value="lt">联通</option>
+                        <option value="dx">电信</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">登录</button>
+            </form>
+        </div>
+        
+        <!-- 日志查看 -->
+        <div class="card">
+            <h2>📋 系统日志</h2>
+            <div class="logs" id="logs-container">
+                加载中...
+            </div>
+            <button class="btn btn-primary" onclick="loadLogs()" style="margin-top: 10px;">🔄 刷新日志</button>
+        </div>
+    </div>
+    
+    <script>
+        let autoLoginEnabled = false;
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            checkStatus();
+            loadLogs();
+            // 自动刷新状态
+            setInterval(checkStatus, 30000);
+            setInterval(loadLogs, 60000);
+        };
+        
+        // 检查状态
+        function checkStatus() {
+            fetch('/api/status')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        updateUI(data.data);
+                    }
+                })
+                .catch(err => console.error('获取状态失败:', err));
+        }
+        
+        // 更新UI
+        function updateUI(data) {
+            // 网络状态
+            const networkStatus = document.getElementById('network-status');
+            if (data.network.connected) {
+                networkStatus.innerHTML = '<span class="status-connected">✅ 已连接</span>';
+            } else {
+                networkStatus.innerHTML = '<span class="status-disconnected">❌ 未连接</span>';
+            }
+            document.getElementById('test-url').textContent = data.network.test_url;
+            
+            // 认证信息
+            document.getElementById('last-login').textContent = 
+                data.auth.last_login_time ? new Date(data.auth.last_login_time).toLocaleString() : '从未登录';
+            document.getElementById('login-count').textContent = data.auth.login_count;
+            document.getElementById('username').textContent = data.config.username || '未配置';
+            
+            // 自动登录状态
+            autoLoginEnabled = data.config.auto_login_enabled;
+            const autoLoginStatus = document.getElementById('auto-login-status');
+            const autoLoginBtn = document.getElementById('auto-login-btn');
+            
+            if (autoLoginEnabled) {
+                autoLoginStatus.innerHTML = '<span class="badge badge-success">✅ 已启用</span>';
+                autoLoginBtn.textContent = '⏸️ 停止自动登录';
+                autoLoginBtn.className = 'btn btn-danger';
+            } else {
+                autoLoginStatus.innerHTML = '<span class="badge badge-danger">❌ 未启用</span>';
+                autoLoginBtn.textContent = '▶️ 启动自动登录';
+                autoLoginBtn.className = 'btn btn-success';
+            }
+            
+            document.getElementById('check-interval').textContent = data.config.check_interval + ' 秒';
+            
+            // 填充快速登录表单
+            if (data.config.username) {
+                document.getElementById('quick-username').value = data.config.username;
+            }
+            if (data.config.operator) {
+                document.getElementById('quick-operator').value = data.config.operator;
+            }
+        }
+        
+        // 执行登录
+        function doLogin() {
+            showMessage('login-message', '正在登录...', 'success');
+            
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('login-message', '✅ ' + data.message, 'success');
+                    checkStatus();
+                } else {
+                    showMessage('login-message', '❌ ' + (data.error || data.message), 'error');
+                }
+            })
+            .catch(err => {
+                showMessage('login-message', '❌ 登录请求失败: ' + err, 'error');
+            });
+        }
+        
+        // 快速登录
+        function doQuickLogin() {
+            const username = document.getElementById('quick-username').value;
+            const password = document.getElementById('quick-password').value;
+            const operator = document.getElementById('quick-operator').value;
+            
+            if (!username || !password) {
+                showMessage('login-message', '❌ 请填写完整信息', 'error');
+                return;
+            }
+            
+            showMessage('login-message', '正在登录...', 'success');
+            
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password, operator})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('login-message', '✅ ' + data.message, 'success');
+                    checkStatus();
+                } else {
+                    showMessage('login-message', '❌ ' + (data.error || data.message), 'error');
+                }
+            })
+            .catch(err => {
+                showMessage('login-message', '❌ 登录请求失败: ' + err, 'error');
+            });
+        }
+        
+        // 切换自动登录
+        function toggleAutoLogin() {
+            const enable = !autoLoginEnabled;
+            
+            fetch('/api/auto_login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({enable})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    checkStatus();
+                }
+            })
+            .catch(err => console.error('切换自动登录失败:', err));
+        }
+        
+        // 加载日志
+        function loadLogs() {
+            fetch('/api/logs?lines=50')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const logsContainer = document.getElementById('logs-container');
+                        if (data.data.logs.length === 0) {
+                            logsContainer.innerHTML = '<div>暂无日志</div>';
+                        } else {
+                            logsContainer.innerHTML = data.data.logs
+                                .map(log => `<div class="log-line">${escapeHtml(log)}</div>`)
+                                .join('');
+                            logsContainer.scrollTop = logsContainer.scrollHeight;
+                        }
+                    }
+                })
+                .catch(err => console.error('加载日志失败:', err));
+        }
+        
+        // 显示消息
+        function showMessage(id, text, type) {
+            const msg = document.getElementById(id);
+            msg.textContent = text;
+            msg.className = 'message show message-' + type;
+            setTimeout(() => {
+                msg.className = 'message';
+            }, 5000);
+        }
+        
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
