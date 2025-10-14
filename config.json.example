@@ -1,0 +1,30 @@
+{
+    "network": {
+        "login_url": "http://172.29.35.36:6060/portalReceiveAction.do?wlanuserip=10.16.211.160&wlanacname=HD-SuShe-ME60",
+        "test_url": "http://www.baidu.com",
+        "timeout": 10,
+        "retry_attempts": 3,
+        "retry_delay": 5
+    },
+    "credentials": {
+        "username": "your_username",
+        "password": "your_password",
+        "operator": "local"
+    },
+    "scheduler": {
+        "enabled": true,
+        "check_interval": 300,
+        "auto_retry_on_failure": true
+    },
+    "logging": {
+        "level": "INFO",
+        "file": "auto_login.log",
+        "max_size_mb": 10,
+        "backup_count": 5,
+        "console_output": true
+    },
+    "security": {
+        "encrypt_credentials": false,
+        "encryption_key_file": ".keyfile"
+    }
+}
